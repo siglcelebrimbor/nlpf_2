@@ -17,6 +17,15 @@ lazy val root = (project in file(".")).
 
       "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion     % Test,
-      "org.scalatest"     %% "scalatest"                % "3.1.4"         % Test
+      "org.scalatest"     %% "scalatest"                % "3.1.4"         % Test,
+
+      "org.scala-js" %%% "scalajs-dom" % "1.1.0"
     )
-  )
+  ).enablePlugins(ScalaJSPlugin)
+
+
+scalaJSUseMainModuleInitializer := true
+
+
+import org.scalajs.linker.interface.ModuleInitializer
+Compile / scalaJSMainModuleInitializer := Some(ModuleInitializer.mainMethodWithArgs("Main", "main"))
