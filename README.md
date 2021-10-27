@@ -6,5 +6,7 @@ https://developer.lightbend.com/guides/akka-http-quickstart-scala/
 ### start the server:
 
 ```
-sbt reStart
+sbt
+<...>
+reStart
 ```
