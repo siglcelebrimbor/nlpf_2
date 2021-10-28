@@ -4,9 +4,6 @@ import akka.actor.typed.ActorSystem
 
 import org.mongodb.scala._
 
-
-case class User(_id: String, first_name: String, last_name: String, mail: String, password: String, is_admin: Boolean)
-
 object MongoClientWrapper {
 
     var actor_system: Option[ActorSystem[_]] = None

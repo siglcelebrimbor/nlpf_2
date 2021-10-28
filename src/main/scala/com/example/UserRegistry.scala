@@ -12,6 +12,9 @@ import org.mongodb.scala._
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.bson.codecs.configuration.CodecRegistries._
 import scala.util.{Success,Failure}
+import org.bson.codecs.configuration.CodecRegistry
+import org.bson.codecs.configuration.CodecRegistries
+import org.mongodb.scala.bson.codecs.Macros
 
 //#user-case-classes
 final case class User(first_name: String, last_name: String, mail: String, password: String, is_admin: Boolean)
@@ -31,9 +34,10 @@ object UserRegistry {
 
   def apply(): Behavior[Command] = {
 
-   /*
-    //val codecRegistry = fromRegistries(fromProviders(classOf[User]), DEFAULT_CODEC_REGISTRY)
-    val collec: MongoCollection[User] = MongoClientWrapper.db.get.getCollection("users")//.withCodecRegistry(codecRegistry)
+    val provider = Macros.createCodecProviderIgnoreNone[User]()
+    val codec = fromRegistries(fromProviders((provider), DEFAULT_CODEC_REGISTRY))
+
+    val collec: MongoCollection[User] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("users")
     val users: FindObservable[User] = collec.find
     val get_users: Future[Seq[User]] = users.collect.head
     implicit val ec = scala.concurrent.ExecutionContext.global
@@ -45,8 +49,8 @@ object UserRegistry {
       case Failure(t) => initial_set = Set.empty
     }
     //val set: Set[Usq[User]) => all.toSet)er] = users.collect.subscribe((all: Seq[User]) => all.toSet)
-    */
-    registry(Set.empty)
+    
+    registry(initial_set)
   }
 
   private def registry(users: Set[User]): Behavior[Command] =
