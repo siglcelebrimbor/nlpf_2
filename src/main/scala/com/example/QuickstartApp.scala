@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.Route
 
 import scala.util.Failure
 import scala.util.Success
+import com.MongoClientWrapper
 
-import org.mongodb.scala._
 
 //#main-class
 object QuickstartApp {
@@ -31,24 +31,18 @@ object QuickstartApp {
   def main(args: Array[String]): Unit = {
     //#server-bootstrapping
     val rootBehavior = Behaviors.setup[Nothing] { context =>
+
+      MongoClientWrapper(context.system)
+
       val userRegistryActor = context.spawn(UserRegistry(), "UserRegistryActor")
       context.watch(userRegistryActor)
 
       val routes = new UserRoutes(userRegistryActor)(context.system)
       startHttpServer(routes.userRoutes)(context.system)
 
+
       Behaviors.empty
     }
-
-    val mongo_user: String = "celembrimbor"
-    val mongo_pw: String = "okRlmS6wHEgIp6l3"
-    val uri: String = "mongodb+srv://" + mongo_user + ":" + mongo_pw + "@dublin1.zuwxd.mongodb.net/estimato?retryWrites=true&w=majority"
-    System.setProperty("org.mongodb.async.type", "netty")
-
-    val client: MongoClient = MongoClient(uri)
-    val db: MongoDatabase = client.getDatabase("estimato")
-    print(db)
-
 
     val system = ActorSystem[Nothing](rootBehavior, "HelloAkkaHttpServer")
     //#server-bootstrapping
