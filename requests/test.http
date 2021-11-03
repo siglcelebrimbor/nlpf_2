@@ -1,0 +1,7 @@
+
+GET {{baseUrl}}/users
+
+###
+
+POST {{{baseUrl}}/users
+Content-Type: application/json

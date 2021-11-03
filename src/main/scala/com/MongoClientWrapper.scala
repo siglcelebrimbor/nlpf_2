@@ -2,7 +2,12 @@ package com
 
 import akka.actor.typed.ActorSystem
 
-import org.mongodb.scala._
+//import org.mongodb.scala._
+import com.mongodb.reactivestreams.client.{MongoClients, MongoClient, MongoDatabase}
+import org.mongodb.scala.{MongoCredential, MongoClientSettings, ServerAddress}
+import scala.collection.JavaConverters._
+import com.example.QuickstartApp
+
 
 object MongoClientWrapper {
 
@@ -11,15 +16,33 @@ object MongoClientWrapper {
 
     def apply(actor_system: ActorSystem[_]) = {
 
-        val mongo_user: String = "celembrimbor"
-        val mongo_pw: String = "okRlmS6wHEgIp6l3"
-        val uri: String = "mongodb+srv://" + mongo_user + ":" + mongo_pw + "@dublin1.zuwxd.mongodb.net/estimato?retryWrites=true&w=majority"
         System.setProperty("org.mongodb.async.type", "netty")
-        val client: MongoClient = MongoClient(uri)
+
+        val mongo_user: String = "celebrimbor"
+        val mongo_pw: String = "celebrimbor"
+        val uri: String = "mongodb+srv://" + mongo_user + ":" + mongo_pw + "@dublin1.zuwxd.mongodb.net/estimato?retryWrites=true&w=majority&authSource=admin&authMechanism=SCRAM-SHA-1"
+        
+        //QuickstartApp.system.log.info(uri)
+        
+        /*
+        val credential: MongoCredential = MongoCredential.createScramSha1Credential(
+            mongo_user,
+            "estimato",
+            mongo_pw.toCharArray()
+        )
+        
+        
+        val settings: MongoClientSettings = MongoClientSettings.builder()
+            .applyToClusterSettings(b => b.hosts(List(ServerAddress("dublin1.zuwxd.mongodb.net")).asJava))
+            .credential(credential)
+            .build()
+        
+        
+          */  
+        val client: MongoClient = MongoClients.create(uri)
         
         this.actor_system = Some(actor_system)
         db = Some(client.getDatabase("estimato"))
-
-        //actor_system.log.error("Initialised mongo wrapper properly!")
+        actor_system.log.error("Initialised mongo wrapper")
     }
 }

@@ -1,9 +1,11 @@
 package com.example
 
+import akka.actor.ActorRefFactory
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import akka.stream.Materializer
 
 import scala.util.Failure
 import scala.util.Success
@@ -27,10 +29,14 @@ object QuickstartApp {
         system.terminate()
     }
   }
+
+  var system : ActorSystem[Nothing] = null
+
   //#start-http-server
   def main(args: Array[String]): Unit = {
     //#server-bootstrapping
     val rootBehavior = Behaviors.setup[Nothing] { context =>
+
 
       MongoClientWrapper(context.system)
 
@@ -40,12 +46,12 @@ object QuickstartApp {
       val routes = new UserRoutes(userRegistryActor)(context.system)
       startHttpServer(routes.userRoutes)(context.system)
 
-
       Behaviors.empty
     }
 
-    val system = ActorSystem[Nothing](rootBehavior, "HelloAkkaHttpServer")
+    this.system = ActorSystem[Nothing](rootBehavior, "HelloAkkaHttpServer")
     //#server-bootstrapping
   }
+
 }
 //#main-class
