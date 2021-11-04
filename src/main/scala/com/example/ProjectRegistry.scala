@@ -52,7 +52,7 @@ object ProjectRegistry {
 
     QuickstartApp.system.log.info("ENTER GET Project SET METHOD")
 
-    val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("Projects", classOf[Project])    
+    val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("projects", classOf[Project])    
     val source: Source[Project, NotUsed] = MongoSource(collec.find(classOf[Project]))
     val rows: Future[Seq[Project]] = source.runWith(Sink.seq)
 
