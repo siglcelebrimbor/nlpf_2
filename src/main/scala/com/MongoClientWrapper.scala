@@ -22,23 +22,6 @@ object MongoClientWrapper {
         val mongo_pw: String = "celebrimbor"
         val uri: String = "mongodb+srv://" + mongo_user + ":" + mongo_pw + "@dublin1.zuwxd.mongodb.net/estimato?retryWrites=true&w=majority&authSource=admin&authMechanism=SCRAM-SHA-1"
         
-        //QuickstartApp.system.log.info(uri)
-        
-        /*
-        val credential: MongoCredential = MongoCredential.createScramSha1Credential(
-            mongo_user,
-            "estimato",
-            mongo_pw.toCharArray()
-        )
-        
-        
-        val settings: MongoClientSettings = MongoClientSettings.builder()
-            .applyToClusterSettings(b => b.hosts(List(ServerAddress("dublin1.zuwxd.mongodb.net")).asJava))
-            .credential(credential)
-            .build()
-        
-        
-          */  
         val client: MongoClient = MongoClients.create(uri)
         
         this.actor_system = Some(actor_system)

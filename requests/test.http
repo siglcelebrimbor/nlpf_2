@@ -3,5 +3,9 @@ GET {{baseUrl}}/users
 
 ###
 
+GET {{baseUrl}}/projects
+
+###
+
 POST {{{baseUrl}}/users
-Content-Type: application/json
+Content-Type: application/json  
