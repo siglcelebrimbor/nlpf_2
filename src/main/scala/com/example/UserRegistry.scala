@@ -39,9 +39,7 @@ object UserRegistry {
   // actor protocol
   sealed trait Command
   final case class GetUsers(replyTo: ActorRef[Users]) extends Command
-  final case class CreateUser(user: User, replyTo: ActorRef[UserActionPerformed]) extends Command
   final case class GetUser(name: String, replyTo: ActorRef[GetUserResponse]) extends Command
-  final case class DeleteUser(name: String, replyTo: ActorRef[UserActionPerformed]) extends Command
 
   final case class GetUserResponse(maybeUser: Option[User])
   final case class UserActionPerformed(description: String)
@@ -92,15 +90,19 @@ object UserRegistry {
       case GetUsers(replyTo) =>
         replyTo ! Users(users.toSeq)
         Behaviors.same
-      case CreateUser(user, replyTo) =>
-        replyTo ! UserActionPerformed(s"User ${user.mail} created.")
-        registry(users + user)
       case GetUser(mail, replyTo) =>
         replyTo ! GetUserResponse(users.find(_.mail == mail))
         Behaviors.same
+      /*
+      case CreateUser(user, replyTo) =>
+        replyTo ! UserActionPerformed(s"Creating user ${user}")
+        registry(users + user /*TODO: actually add the user*/)
+      */
+      /*
       case DeleteUser(mail, replyTo) =>
         replyTo ! UserActionPerformed(s"User $mail deleted.")
         registry(users.filterNot(_.mail == mail))
+      */
     }
 }
 //#user-registry-actor

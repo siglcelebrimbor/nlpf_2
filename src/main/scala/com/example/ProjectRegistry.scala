@@ -1,7 +1,7 @@
 package com.example
 
 //#Project-registry-actor
-import akka.NotUsed
+import akka.{NotUsed, Done}
 import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
@@ -20,11 +20,11 @@ import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.codecs.Macros
 
 import scala.collection.immutable
-import scala.concurrent.Await
-import scala.concurrent.Future
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
+import akka.stream.alpakka.mongodb.scaladsl.MongoSink
 
 //#Project-case-classes
 final case class Project(id: String, address: String, city_code: String, city_name: String, location_type: String, sqm_area: Int, value: Int)
@@ -76,6 +76,15 @@ object ProjectRegistry {
     initial_set
   }
 
+  def create_project(project: Project): Set[Project] = {
+    QuickstartApp.system.log.info("ENTER CREATE Project METHOD with value:", project)
+    val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("projects", classOf[Project])    
+    val source: Source[Project, NotUsed] = Source.single(project)
+    val sink: Sink[Project, Future[Done]] = MongoSink.insertOne(collection = collec)
+    //sink.runWith(source)
+    //source.runWith(MongoSink.insertOne(collec).seq)
+    Set.empty
+  }
 
   def apply(): Behavior[Command] = {
     val Projects: Set[Project] = get_project_set()
@@ -89,14 +98,14 @@ object ProjectRegistry {
         replyTo ! Projects(projects.toSeq)
         Behaviors.same
       case CreateProject(project, replyTo) =>
-        replyTo ! ProjectActionPerformed(s"Project ${project.id} created.")
-        registry(projects + project)
+        replyTo ! ProjectActionPerformed(s"Creating project ${project}")
+        registry(create_project(project))
       case GetProject(id, replyTo) =>
         replyTo ! GetProjectResponse(projects.find(_.id == id))
         Behaviors.same
       case DeleteProject(id, replyTo) =>
-        replyTo ! ProjectActionPerformed(s"Project $id deleted.")
-        registry(projects.filterNot(_.id == id))
+        replyTo ! ProjectActionPerformed(s"Deleting project $id")
+        registry(projects /*TODO: actually remove the project */)
     }
 }
 //#Project-registry-actor

@@ -28,10 +28,6 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
     userRegistry.ask(GetUsers)
   def getUser(name: String): Future[GetUserResponse] =
     userRegistry.ask(GetUser(name, _))
-  def createUser(user: User): Future[UserActionPerformed] =
-    userRegistry.ask(CreateUser(user, _))
-  def deleteUser(name: String): Future[UserActionPerformed] =
-    userRegistry.ask(DeleteUser(name, _))
 
   def getProjects(): Future[Projects] =
     projectRegistry.ask(GetProjects)
@@ -39,10 +35,6 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
     projectRegistry.ask(GetProject(name, _))
   def createProject(project: Project): Future[ProjectActionPerformed] =
     projectRegistry.ask(CreateProject(project, _))
-  def deleteProject(name: String): Future[ProjectActionPerformed] =
-    projectRegistry.ask(DeleteProject(name, _))
-
-
 
 
   //#all-routes
@@ -53,22 +45,12 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
       concat(
         //#users-get-delete
         pathEnd {
-          concat(
             get {
               complete(getUsers())
-            },
-            post {
-              entity(as[User]) { user =>
-                onSuccess(createUser(user)) { performed =>
-                  complete((StatusCodes.Created, performed))
-                }
-              }
-            })
+            }
         },
-        //#users-get-delete
         //#users-get-post
         path(Segment) { name =>
-          concat(
             get {
               //#retrieve-user-info
               rejectEmptyResponse {
@@ -77,16 +59,8 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
                 }
               }
               //#retrieve-user-info
-            },
-            delete {
-              //#users-delete-logic
-              onSuccess(deleteUser(name)) { performed =>
-                complete((StatusCodes.OK, performed))
-              }
-              //#users-delete-logic
-            })
+            }
         })
-      //#users-get-delete
     }
 
 
@@ -110,7 +84,6 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
         //#projects-get-delete
         //#projects-get-post
         path(Segment) { name =>
-          concat(
             get {
               //#retrieve-project-info
               rejectEmptyResponse {
@@ -119,14 +92,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
                 }
               }
               //#retrieve-project-info
-            },
-            delete {
-              //#projects-delete-logic
-              onSuccess(deleteProject(name)) { performed =>
-                complete((StatusCodes.OK, performed))
-              }
-              //#projects-delete-logic
-            })
+            }
         })
       //#projects-get-delete
     }
