@@ -1,5 +1,7 @@
 # nlpf_2
 
+# Introduction (how to run this)
+
 ### initial ressource:
 https://developer.lightbend.com/guides/akka-http-quickstart-scala/
 
@@ -31,3 +33,39 @@ Multiple main classes detected. Select one to run:
 ```
 
 cela génere un fichier javascript 'main.js' et 'main.js.map' dans target/scala-2.13/akka-http-quickstart-scala-fastopt/
+
+
+### IDE / DEBUG
+
+L'extension metals sur VS Code offre du debugging scala (très très utile) (attention c'est gourmand en ressource)
+
+# Project structure breakdown
+
+## BACKEND
+
+    * framework: Akka https://akka.io/docs/
+    * connection MongoDB: Alpakka https://doc.akka.io/docs/alpakka/current/mongodb.html
+
+
+fichiers (root= src/main/scala/com):
+
+    * example/QuickstartApp.scala: fichier principal. Lance l'application
+
+    * example/<foo>Registry.scala: Définit l'entité <foo> en tant que Class et les actions élémentaires à effectuer dessus (create, delete, get all, get one, etc...). Gère la connection avec la base de données Mongo
+
+    * example/JsonFormats.scala: définit la méthode de conversion en Json à utiliser pour les types définis dans <foo>Registry.scala
+    
+    * example/Routes.scala: définit les routes
+
+    * MongoClientWrapper.scala: singleton object gérant la connection avec la base de donnée (utilisé par les fichiers <foo>Registry.scala)
+
+## FRONTEND
+
+    * framework: Scala JS (http://www.scala-js.org/doc/tutorial/basic/)
+
+fichiers (root= src/main/scala/front)
+
+    * main.scala: point d'entrée de l'application
+
+
+le fichier index.html à la racine du projet contient le script target/scala-2.13/akka-http-quickstart-scala-fastopt/main.js généré par la compilation du front
