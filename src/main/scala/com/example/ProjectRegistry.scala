@@ -72,18 +72,18 @@ object ProjectRegistry {
     while (initial_set == null) { //this is a workaround to Await.result not waiting for callback execution
       //QuickstartApp.system.log.info("waiting...")
     }
-    QuickstartApp.system.log.info("done setting initial Project set")
+    //QuickstartApp.system.log.info("done setting initial Project set")
     initial_set
   }
 
   def create_project(project: Project): Set[Project] = {
-    QuickstartApp.system.log.info("ENTER CREATE Project METHOD with value:", project)
+    //QuickstartApp.system.log.info(s"ENTER CREATE Project METHOD with project: ${project}")
     val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("projects", classOf[Project])    
     val source: Source[Project, NotUsed] = Source.single(project)
     val sink: Sink[Project, Future[Done]] = MongoSink.insertOne(collection = collec)
-    //sink.runWith(source)
+    sink.runWith(source)
     //source.runWith(MongoSink.insertOne(collec).seq)
-    Set.empty
+    get_project_set()
   }
 
   def apply(): Behavior[Command] = {
