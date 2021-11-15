@@ -28,7 +28,8 @@ lazy val root = (project in file(".")).
       "org.scalatest"     %% "scalatest"                % "3.1.4"         % Test,
 
       //scala JS
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0"
+      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+      "com.lihaoyi" %%% "scalatags" % "0.9.1"
     )
   ).enablePlugins(ScalaJSPlugin)
 
