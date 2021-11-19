@@ -46,7 +46,11 @@ object QuickstartApp {
       val projectRegistryActor = context.spawn(ProjectRegistry(), "ProjectRegistryActor")
       context.watch(projectRegistryActor)
       
-      val routes: Routes = new Routes(userRegistryActor, projectRegistryActor)(context.system)
+      val dvfindicatorRegistryActor = context.spawn(DvfIndicatorRegistry(), "DvfIndicatorRegistryActor")
+      context.watch(projectRegistryActor)
+      
+
+      val routes: Routes = new Routes(userRegistryActor, projectRegistryActor, dvfindicatorRegistryActor)(context.system)
 
       startHttpServer(routes.routes)(context.system)
 

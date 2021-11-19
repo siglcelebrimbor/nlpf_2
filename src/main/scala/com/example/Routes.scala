@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Route
 import scala.concurrent.Future
 import com.example.UserRegistry._
 import com.example.ProjectRegistry._
+import com.example.DvfIndicatorRegistry._
 import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.AskPattern._
@@ -14,7 +15,10 @@ import akka.util.Timeout
 
 //#import-json-formats
 //#user-routes-class
-class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: ActorRef[ProjectRegistry.Command])(implicit val system: ActorSystem[_]) {
+class Routes(userRegistry: ActorRef[UserRegistry.Command],
+  projectRegistry: ActorRef[ProjectRegistry.Command],
+  dvfindicatorRegistry: ActorRef[DvfIndicatorRegistry.Command])
+  (implicit val system: ActorSystem[_]) {
 
   //#user-routes-class
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -35,6 +39,11 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
     projectRegistry.ask(GetProject(name, _))
   def createProject(project: Project): Future[ProjectActionPerformed] =
     projectRegistry.ask(CreateProject(project, _))
+
+  def getDvfIndicators(): Future[DvfIndicators] =
+    dvfindicatorRegistry.ask(GetDvfIndicators)
+  def getDvfIndicator(postal_code: String): Future[GetDvfIndicatorResponse] =
+    dvfindicatorRegistry.ask(GetDvfIndicator(postal_code, _))
 
 
   //#all-routes
@@ -97,10 +106,33 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command], projectRegistry: Acto
       //#projects-get-delete
     }
 
+
+
+  val dvfIndicatorRoutes: Route =
+    pathPrefix("dvfindicators") {
+      concat(
+        get {
+              complete(getDvfIndicators())
+          },
+        path(Segment) { postal_code =>
+          get {
+            //#retrieve-project-info
+            rejectEmptyResponse {
+              onSuccess(getDvfIndicator(postal_code)) { response =>
+                complete(response.maybeDvfIndicator)
+              }
+            }
+            //#retrieve-project-info
+          }
+      })
+    }
+
+
   val routes: Route = 
     concat(
       userRoutes,
-      projectRoutes
+      projectRoutes,
+      dvfIndicatorRoutes
     )
 
 }

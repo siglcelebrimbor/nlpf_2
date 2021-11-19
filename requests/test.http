@@ -7,5 +7,23 @@ GET {{baseUrl}}/projects
 
 ###
 
-POST {{{baseUrl}}/users
-Content-Type: application/json  
+POST {{baseUrl}}/projects
+Content-Type: application/json
+
+{
+    "address": "24 rue Malreaux",
+    "city_code": "93100",
+    "city_name": "Montreuil",
+    "id": "1",
+    "location_type": "appartment",
+    "sqm_area": 20,
+    "value": 400000
+}
+
+###
+
+GET {{baseUrl}}/dvfindicators
+
+###
+
+GET {{baseUrl}}/dvfindicators/75003

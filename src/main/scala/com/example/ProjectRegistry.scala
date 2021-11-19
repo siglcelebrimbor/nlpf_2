@@ -2,29 +2,26 @@ package com.example
 
 //#Project-registry-actor
 import akka.{NotUsed, Done}
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef,Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.stream.ActorMaterializer
-import akka.stream.Materializer
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.alpakka.mongodb.scaladsl.MongoSource
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Sink, Source}
 import com.MongoClientWrapper
 import com.example.QuickstartApp
 import com.mongodb.reactivestreams.client._
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.codecs.configuration.{CodecRegistries, CodecRegistry}
 import org.bson.codecs.configuration.CodecRegistries._
-import org.bson.codecs.configuration.CodecRegistry
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.codecs.Macros
 
 import scala.collection.immutable
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure,Success}
 import akka.stream.alpakka.mongodb.scaladsl.MongoSink
+import org.mongodb.scala.model.Filters
+import org.bson.conversions.Bson
 
 //#Project-case-classes
 final case class Project(id: String, address: String, city_code: String, city_name: String, location_type: String, sqm_area: Int, value: Int)
@@ -49,9 +46,6 @@ object ProjectRegistry {
   implicit val ec = scala.concurrent.ExecutionContext.global
 
   def get_project_set(): Set[Project] = {
-
-    QuickstartApp.system.log.info("ENTER GET Project SET METHOD")
-
     val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("projects", classOf[Project])    
     val source: Source[Project, NotUsed] = MongoSource(collec.find(classOf[Project]))
     val rows: Future[Seq[Project]] = source.runWith(Sink.seq)
@@ -82,7 +76,14 @@ object ProjectRegistry {
     val source: Source[Project, NotUsed] = Source.single(project)
     val sink: Sink[Project, Future[Done]] = MongoSink.insertOne(collection = collec)
     sink.runWith(source)
-    //source.runWith(MongoSink.insertOne(collec).seq)
+    get_project_set()
+  }
+
+  def delete_project(id: String): Set[Project] = {
+    val collec: MongoCollection[Project] = MongoClientWrapper.db.get.withCodecRegistry(codec).getCollection("projects", classOf[Project])    
+    val source: Source[Bson, NotUsed] = Source.single((Filters.eq("id", id)))
+    source.runWith(MongoSink.deleteOne(collection = collec))
+  
     get_project_set()
   }
 
