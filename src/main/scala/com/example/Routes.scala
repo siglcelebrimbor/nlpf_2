@@ -13,6 +13,8 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 
+
+
 //#import-json-formats
 //#user-routes-class
 class Routes(userRegistry: ActorRef[UserRegistry.Command],
@@ -46,6 +48,8 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
     dvfindicatorRegistry.ask(GetDvfIndicator(postal_code, _))
 
 
+    private val cors = new com.CORSHandler {}
+
   //#all-routes
   //#users-get-post
   //#users-get-delete
@@ -55,7 +59,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
         //#users-get-delete
         pathEnd {
             get {
-              complete(getUsers())
+              cors.corsHandler(complete(getUsers()))
             }
         },
         //#users-get-post
@@ -64,7 +68,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
               //#retrieve-user-info
               rejectEmptyResponse {
                 onSuccess(getUser(name)) { response =>
-                  complete(response.maybeUser)
+                  cors.corsHandler(complete(response.maybeUser))
                 }
               }
               //#retrieve-user-info
@@ -85,7 +89,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
             post {
               entity(as[Project]) { project =>
                 onSuccess(createProject(project)) { performed =>
-                  complete((StatusCodes.Created, performed))
+                  cors.corsHandler(complete((StatusCodes.Created, performed)))
                 }
               }
             })
@@ -97,7 +101,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
               //#retrieve-project-info
               rejectEmptyResponse {
                 onSuccess(getProject(name)) { response =>
-                  complete(response.maybeProject)
+                  cors.corsHandler(complete(response.maybeProject))
                 }
               }
               //#retrieve-project-info
@@ -112,14 +116,14 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
     pathPrefix("dvfindicators") {
       concat(
         get {
-              complete(getDvfIndicators())
+              cors.corsHandler(complete(getDvfIndicators()))
           },
         path(Segment) { postal_code =>
           get {
             //#retrieve-project-info
             rejectEmptyResponse {
               onSuccess(getDvfIndicator(postal_code)) { response =>
-                complete(response.maybeDvfIndicator)
+                cors.corsHandler(complete(response.maybeDvfIndicator))
               }
             }
             //#retrieve-project-info
@@ -128,11 +132,10 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
     }
 
 
-  val routes: Route = 
+  val routes: Route =
     concat(
       userRoutes,
       projectRoutes,
       dvfIndicatorRoutes
     )
-
 }
