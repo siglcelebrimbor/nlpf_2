@@ -3,6 +3,7 @@ package indicators
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLImageElement
 import org.scalajs.dom.{ document, window } 
+//import akka.http.scaladsl.model.{ HttpRequest, HttpMethods, HttpEntity }
 
 
 //https://github.com/vmunier/scalajs-simple-canvas-game/blob/master/src/main/scala/simplegame/SimpleCanvasGame.scala
@@ -26,6 +27,17 @@ class Graph(query: String) {
     def isReady: Boolean = ready
 }
 
+class Indicator(postalCode: String) {
+    /*val req = HttpRequest(
+        method = HttpMethods.GET,
+        uri = "http://localhost:8080/dvfindicators"
+    )
+
+    i
+    Console.println(req)*/
+    Console.println(dom.ext.Ajax.get("http://localhost:8080/dvfindicators"))
+}
+
 object indicators
 {
     def default(): Unit = 
@@ -41,6 +53,8 @@ object indicators
             }
             
         }
+
+        val ind = new Indicator("78120")
 
         dom.window.setInterval(() => render, 1000)
 
