@@ -50,7 +50,7 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
 
     private val cors = new com.CORSHandler {}
 
-  //#all-routes
+  //#all-routesClick to add text​
   //#users-get-post
   //#users-get-delete
   val userRoutes: Route =
@@ -115,9 +115,11 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
   val dvfIndicatorRoutes: Route =
     pathPrefix("dvfindicators") {
       concat(
-        get {
+        pathEnd {
+          get {
               cors.corsHandler(complete(getDvfIndicators()))
-          },
+          }
+        },
         path(Segment) { postal_code =>
           get {
             //#retrieve-project-info
