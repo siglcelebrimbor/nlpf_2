@@ -34,7 +34,10 @@ object DvfIndicatorRegistry {
   // actor protocol
   sealed trait Command
   final case class GetDvfIndicators(replyTo: ActorRef[DvfIndicators]) extends Command
-  final case class GetDvfIndicator(name: String, replyTo: ActorRef[GetDvfIndicatorResponse]) extends Command
+  final case class GetDvfIndicatorsForCode(postal_code: String, replyTo: ActorRef[DvfIndicators]) extends Command
+  final case class GetDvfIndicator(postal_code: String, year: String, replyTo: ActorRef[GetDvfIndicatorResponse]) extends Command
+
+
 
   final case class GetDvfIndicatorResponse(maybeDvfIndicator: Option[DvfIndicator])
 
@@ -53,7 +56,7 @@ object DvfIndicatorRegistry {
 
     rows onComplete {
       case Success(dvfindicators) => {
-        QuickstartApp.system.log.info("fetched DvfIndicators:" + dvfindicators.toString())
+        QuickstartApp.system.log.info("fetched DvfIndicators:" + dvfindicators.length)
         initial_set = dvfindicators.toSet
       }
       case Failure(t) => {
@@ -72,7 +75,6 @@ object DvfIndicatorRegistry {
 
   def apply(): Behavior[Command] = {
     val dvfindicators: Set[DvfIndicator] = get_dvfindicator_set()
-    QuickstartApp.system.log.info("WILL ENTER METHOD REGISTRY with DvfIndicators:" + dvfindicators.toString())
     registry(dvfindicators)
   }
 
@@ -81,8 +83,13 @@ object DvfIndicatorRegistry {
       case GetDvfIndicators(replyTo) =>
         replyTo ! DvfIndicators(dvfindicators.toSeq)
         Behaviors.same
-      case GetDvfIndicator(postal_code, replyTo) =>
-        replyTo ! GetDvfIndicatorResponse(dvfindicators.find(_.postal_code == postal_code))
+      case GetDvfIndicatorsForCode(postal_code,replyTo) =>
+        replyTo ! DvfIndicators(dvfindicators.filter(indic => indic.postal_code == postal_code).toSeq)
+        Behaviors.same
+      case GetDvfIndicator(postal_code, year, replyTo) =>
+        //dvfindicators.find(_ => _.postal_code == postal_code)
+        val indic: Option[DvfIndicator] = dvfindicators.find(elt => elt.postal_code == postal_code && elt.year == year)
+        replyTo ! GetDvfIndicatorResponse(indic/* && indic.year == year)*/)
         Behaviors.same
     }
 }

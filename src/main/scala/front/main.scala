@@ -8,8 +8,6 @@ import indicators._
 object Main {
   def main(args: Array[String]): Unit = {
 
-
-
     val content =
       div(cls:="container",
         nav.default,

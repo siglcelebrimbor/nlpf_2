@@ -26,4 +26,16 @@ GET {{baseUrl}}/dvfindicators
 
 ###
 
-GET {{baseUrl}}/dvfindicators/75003
+GET {{baseUrl}}/dvfindicators?postal_code=75003
+
+###
+
+GET {{baseUrl}}/dvfindicators?postal_code=75003&year=2018
+
+###
+
+GET https://quickchart.io/chart?c={%22type%22:%20%22bar%22,%20%22data%22:%20{%20%22labels%22:%20[%222016%22,%20%222017%22,%20%222018%22,%20%222019%22,%20%222020%22],%20%22datasets%22:%20[{%22label%22:%20%22buying%20price%20(%E2%82%AC)%22,%20%22data%22:%20[8513.3908045977,9682.539682539682,9919.24,11000,11164]}]}
+
+###
+
+GET https://quickchart.io/chart?bkg=white&c={type:%27bar%27,data:{labels:[2012,2013,2014,2015,2016],datasets:[{label:%27Users%27,data:[120,60,50,180,120]}]}}

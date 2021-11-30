@@ -5,6 +5,6 @@ import scalatags.JsDom.all._
 object nav {
   val default =
     div(cls := "nav",
-      h1(cls := "title", "Hello World!")
+      h1(cls := "title", "Estimato")
     )
 }

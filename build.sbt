@@ -29,8 +29,16 @@ lazy val root = (project in file(".")).
 
       //scala JS
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-      "com.lihaoyi" %%% "scalatags" % "0.9.1"
+      "com.lihaoyi"  %%% "scalatags" % "0.9.1",
+      
+      "io.circe" %% "circe-config" % "0.8.0",
+      "io.circe" %% "circe-core" % "0.13.0",
+      "io.circe" %% "circe-fs2" % "0.13.0",
+      "io.circe" %% "circe-generic" % "0.13.0",
+      "io.circe" %% "circe-parser" % "0.13.0",
+      "io.circe" %% "circe-refined" % "0.13.0"
     )
+
   ).enablePlugins(ScalaJSPlugin)
 
 

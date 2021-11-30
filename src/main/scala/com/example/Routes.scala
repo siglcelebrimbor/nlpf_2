@@ -44,8 +44,10 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
 
   def getDvfIndicators(): Future[DvfIndicators] =
     dvfindicatorRegistry.ask(GetDvfIndicators)
-  def getDvfIndicator(postal_code: String): Future[GetDvfIndicatorResponse] =
-    dvfindicatorRegistry.ask(GetDvfIndicator(postal_code, _))
+  def getDvfIndicatorsForCode(postal_code: String): Future[DvfIndicators] =
+    dvfindicatorRegistry.ask(GetDvfIndicatorsForCode(postal_code, _))
+  def getDvfIndicator(postal_code: String, year: String): Future[GetDvfIndicatorResponse] =
+    dvfindicatorRegistry.ask(GetDvfIndicator(postal_code, year, _))
 
 
     private val cors = new com.CORSHandler {}
@@ -117,21 +119,22 @@ class Routes(userRegistry: ActorRef[UserRegistry.Command],
       concat(
         pathEnd {
           get {
-              cors.corsHandler(complete(getDvfIndicators()))
-          }
-        },
-        path(Segment) { postal_code =>
-          get {
-            //#retrieve-project-info
-            rejectEmptyResponse {
-              onSuccess(getDvfIndicator(postal_code)) { response =>
-                cors.corsHandler(complete(response.maybeDvfIndicator))
+            parameters("postal_code".optional, "year".optional) { (postal_code, year) => {
+              (postal_code.isEmpty, year.isEmpty) match {
+                case (false, false) =>  { rejectEmptyResponse {
+                  onSuccess(getDvfIndicator(postal_code.get, year.get)) { response =>
+                    cors.corsHandler(complete(response.maybeDvfIndicator))
+                  }}
+                }
+                case (false, true) => cors.corsHandler(complete(getDvfIndicatorsForCode(postal_code.get)))
+                case default => cors.corsHandler(complete(getDvfIndicators()))
               }
-            }
-            //#retrieve-project-info
+            }}
           }
-      })
+        }
+      )
     }
+
 
 
   val routes: Route =
