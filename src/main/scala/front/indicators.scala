@@ -23,11 +23,10 @@ class Graph(query: String) {
 
     private val canvas = dom.document.createElement("canvas").asInstanceOf[dom.html.Canvas]
     private val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-
     canvas.height = 500
     canvas.width = 800
     dom.document.body.appendChild(canvas)
-    private var ready: Boolean = false
+    var ready: Boolean = false
 
     val element = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
     element.onload = (e: dom.Event) => ready = true
@@ -38,13 +37,33 @@ class Graph(query: String) {
     def isReady: Boolean = ready
 }
 
+
+class Image(path: String) {
+    private val canvas = dom.document.createElement("canvas").asInstanceOf[dom.html.Canvas]
+    private val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+    canvas.height = 500
+    canvas.width = 800
+    dom.document.body.appendChild(canvas)
+    var ready: Boolean = false
+
+    val element = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
+    element.onload = (e: dom.Event) => ready = true
+    element.src = path
+
+    def getCanvas: dom.html.Canvas = canvas
+    def getContext: dom.CanvasRenderingContext2D = ctx
+    def isReady: Boolean = ready
+}
+
 object graphs {
 
-
+    var code: String = ""
     var indicators: List[Indicator] = List[Indicator]()
     var generatedGraph: Boolean = false
     var fetchedIndicators: Boolean = false
     var buyingPriceGraph: Option[Graph] = None
+    var buyingPricePerTypeGraph: Option[Graph] = None
+    var rentingPriceGraph: Option[Graph] = None
     var priceEvolutionGraph: Option[Graph] = None
 
     def getIndicators(postalCode: String) = {
@@ -76,7 +95,6 @@ object graphs {
         })
     }
 
-
     def generateBuyingPriceGraph() {
         // generate buying price graphs
         val indicator2020: Option[Indicator] = indicators.find(_.year == "2020")
@@ -89,6 +107,37 @@ object graphs {
                                   |}""".stripMargin.replaceAll("\n", " ")
         buyingPriceGraph = Some(new Graph(queryStr))
     }
+
+    def generateRentingPriceGraph() {
+        // generate buying price graphs
+        val indicator2020: Option[Indicator] = indicators.find(_.year == "2020")
+        val dataStr: String = List(indicator2020.get.rental_fq_by_sqm.doubleValue(), indicator2020.get.rental_median_by_sqm.doubleValue(), indicator2020.get.rental_tq_by_sqm.doubleValue())
+                                .sorted
+                                .mkString(",")
+        val queryStr: String = s"""{type: 'bar',
+                                    |data: { labels: ['1st quartile', 'median', '3rd quartile'],
+                                    |datasets: [{label: 'rental price quartiles', data: [$dataStr] }]}
+                                    |}""".stripMargin.replaceAll("\n", " ")
+        rentingPriceGraph = Some(new Graph(queryStr))
+    }
+
+
+    def generateBuyingPriceGraphPerType() {
+        // generate buying price graphs
+        val indicator2020: Option[Indicator] = indicators.find(_.year == "2020")
+        val sq_m_price: Double = indicator2020.get.purchase_median_by_sqm.doubleValue()
+        val dataStr: String = List(sq_m_price * 32, sq_m_price * 45, sq_m_price * 65, sq_m_price * 80, sq_m_price * 120)
+                                .sorted
+                                .mkString(",")
+        val queryStr: String = s"""{type: 'bar',
+                                  |data: { labels: ['t1', 't2', 't3', 't4', 't5'],
+                                  |datasets: [{label: 'buying prices (€)', data: [$dataStr] }]}
+                                  |}""".stripMargin.replaceAll("\n", " ")
+        buyingPricePerTypeGraph = Some(new Graph(queryStr))
+    }
+
+
+    
 
     def generatePriceEvolutionGraph() {
         // generate year comparison
@@ -104,16 +153,26 @@ object graphs {
     }
 
     def generateGraph() {
-        if (!generatedGraph) {
-            if (!fetchedIndicators) {
-                getIndicators("75001")
-            }
-            else {
-                generateBuyingPriceGraph()
-                generatePriceEvolutionGraph()
-                generatedGraph = true
+        if (code != "") {
+            if (!generatedGraph) {
+                if (!fetchedIndicators) {
+                    getIndicators("75001")
+                }
+                else {
+                    val child = dom.document.createElement("h2")
+                    child.textContent = "Indicators for municipality: " + code
+                    dom.document.body.appendChild(child)
+
+                    generateBuyingPriceGraph()
+                    generateBuyingPriceGraphPerType()
+                    generateRentingPriceGraph()
+                    generatePriceEvolutionGraph()
+
+                    generatedGraph = true
+                }
             }
         }
+       
     }
 
 }
@@ -123,17 +182,39 @@ object graphs {
 object indicators
 {
 
-    def Graphs(): Unit = 
+    
+
+    def Graphs() = 
     {
+        var appartmentCharts: Option[Image] = None
+
         def render() {
+
             if (!graphs.priceEvolutionGraph.isEmpty && graphs.priceEvolutionGraph.get.isReady) {
-                Console.println("price evolution graph ready!")
+                graphs.priceEvolutionGraph.get.ready = false
                 val g = graphs.priceEvolutionGraph.get
                 g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
             }
             if (!graphs.buyingPriceGraph.isEmpty && graphs.buyingPriceGraph.get.isReady) {
+                graphs.buyingPriceGraph.get.ready = false
                 val g = graphs.buyingPriceGraph.get
                 g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
+            }
+            if (!graphs.buyingPricePerTypeGraph.isEmpty && graphs.buyingPricePerTypeGraph.get.isReady) {
+                graphs.buyingPricePerTypeGraph.get.ready = false
+                val g = graphs.buyingPricePerTypeGraph.get
+                g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
+            }
+
+            if (!graphs.rentingPriceGraph.isEmpty && graphs.rentingPriceGraph.get.isReady) {
+                graphs.rentingPriceGraph.get.ready = false
+                val g = graphs.rentingPriceGraph.get
+                g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
+            }
+
+            if (graphs.generatedGraph && !appartmentCharts.isEmpty && appartmentCharts.get.isReady) {
+                appartmentCharts.get.ready = false
+                appartmentCharts.get.getContext.drawImage(appartmentCharts.get.element, 0, 0, appartmentCharts.get.getCanvas.width, appartmentCharts.get.getCanvas.height)
             }
             
         }
@@ -142,11 +223,14 @@ object indicators
         val generateGraphHandle = dom.window.setInterval(() => graphs.generateGraph, 1000)
         if (graphs.generatedGraph) {
             dom.window.clearInterval(generateGraphHandle)
-        }   
+        }
+
+        appartmentCharts = Some(new Image("./assets/chart.png"))
+
+
     }
 
 
     val default = div(cls:="container",
-            h1(cls := "title", "Indicators"),
-            Graphs())
+        Graphs())
 }
