@@ -5,13 +5,13 @@ import org.scalajs.dom.raw.HTMLImageElement
 import org.scalajs.dom.{ document, window } 
 import scala.concurrent.Future
 import scalatags.JsDom.all._
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import scalajs.js.JSON.parse
 
 import scalajs.js
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scalatags.JsDom
 
 //import akka.http.scaladsl.model.{ HttpRequest, HttpMethods, HttpEntity }
 
@@ -38,13 +38,14 @@ class Graph(query: String) {
     def isReady: Boolean = ready
 }
 
-object priceEvolutionGraph {
+object graphs {
 
 
     var indicators: List[Indicator] = List[Indicator]()
     var generatedGraph: Boolean = false
     var fetchedIndicators: Boolean = false
-    var graph: Option[Graph] = None
+    var buyingPriceGraph: Option[Graph] = None
+    var priceEvolutionGraph: Option[Graph] = None
 
     def getIndicators(postalCode: String) = {
         println("get indicators for code:", postalCode)
@@ -75,23 +76,41 @@ object priceEvolutionGraph {
         })
     }
 
+
+    def generateBuyingPriceGraph() {
+        // generate buying price graphs
+        val indicator2020: Option[Indicator] = indicators.find(_.year == "2020")
+        val dataStr: String = List(indicator2020.get.purchase_fq_by_sqm.doubleValue(), indicator2020.get.purchase_median_by_sqm.doubleValue(), indicator2020.get.purchase_tq_by_sqm.doubleValue())
+                                .sorted
+                                .mkString(",")
+        val queryStr: String = s"""{type: 'bar',
+                                  |data: { labels: ['1st quartile', 'median', '3rd quartile'],
+                                  |datasets: [{label: 'buying price quartiles', data: [$dataStr] }]}
+                                  |}""".stripMargin.replaceAll("\n", " ")
+        buyingPriceGraph = Some(new Graph(queryStr))
+    }
+
+    def generatePriceEvolutionGraph() {
+        // generate year comparison
+        val data: List[Number] = indicators
+                    .sortBy(indic => indic.year)
+                    .map(indic => indic.purchase_median_by_sqm)
+        val dataStr: String = data.mkString(",")
+        val queryStr: String = s"""{type: 'line',
+                                    |data: { labels: [2016, 2017, 2018, 2019, 2020],
+                                            |datasets: [{label: 'buying price (€ / m²)', data: [$dataStr] }]}
+                                    |}""".stripMargin.replaceAll("\n", " ")
+        priceEvolutionGraph = Some(new Graph(queryStr))
+    }
+
     def generateGraph() {
         if (!generatedGraph) {
             if (!fetchedIndicators) {
                 getIndicators("75001")
             }
             else {
-                val data: List[Number] = indicators
-                            .sortBy(indic => indic.year)
-                            .map(indic => indic.purchase_median_by_sqm)
-                val dataStr: String = data.mkString(",")
-                val queryStr: String = s"""{type: 'bar',
-                                            |data: { labels: [2016, 2017, 2018, 2019, 2020],
-                                                    |datasets: [{label: 'buying price (€ / m²)', data: [$dataStr] }]}
-                                            |}""".stripMargin.replaceAll("\n", " ")
-                println(queryStr)
-                
-                graph = Some(new Graph(queryStr))
+                generateBuyingPriceGraph()
+                generatePriceEvolutionGraph()
                 generatedGraph = true
             }
         }
@@ -104,24 +123,30 @@ object priceEvolutionGraph {
 object indicators
 {
 
-    def priceEvolutionIndicator(): Unit = 
+    def Graphs(): Unit = 
     {
         def render() {
-            if (!priceEvolutionGraph.graph.isEmpty && priceEvolutionGraph.graph.get.isReady) {
-                Console.println("graph is ready!")
-                val g1 = priceEvolutionGraph.graph.get
-                g1.getContext.drawImage(g1.element, 0, 0, g1.getCanvas.width, g1.getCanvas.height)
+            if (!graphs.priceEvolutionGraph.isEmpty && graphs.priceEvolutionGraph.get.isReady) {
+                Console.println("price evolution graph ready!")
+                val g = graphs.priceEvolutionGraph.get
+                g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
+            }
+            if (!graphs.buyingPriceGraph.isEmpty && graphs.buyingPriceGraph.get.isReady) {
+                val g = graphs.buyingPriceGraph.get
+                g.getContext.drawImage(g.element, 0, 0, g.getCanvas.width, g.getCanvas.height)
             }
             
         }
 
-        dom.window.setInterval(() => render, 1000)
-        dom.window.setInterval(() => priceEvolutionGraph.generateGraph, 1000)
-        
+        val renderHandle = dom.window.setInterval(() => render, 1000)
+        val generateGraphHandle = dom.window.setInterval(() => graphs.generateGraph, 1000)
+        if (graphs.generatedGraph) {
+            dom.window.clearInterval(generateGraphHandle)
+        }   
     }
 
 
-    val default =  div(cls:="container",
+    val default = div(cls:="container",
             h1(cls := "title", "Indicators"),
-            priceEvolutionIndicator())
+            Graphs())
 }
