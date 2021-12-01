@@ -12,6 +12,7 @@ import scalajs.js
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scalatags.JsDom
+import front.address.realestateForm
 
 //import akka.http.scaladsl.model.{ HttpRequest, HttpMethods, HttpEntity }
 
@@ -103,7 +104,7 @@ object graphs {
                                 .mkString(",")
         val queryStr: String = s"""{type: 'bar',
                                   |data: { labels: ['1st quartile', 'median', '3rd quartile'],
-                                  |datasets: [{label: 'buying price quartiles', data: [$dataStr] }]}
+                                  |datasets: [{label: 'buying price quartiles (€)', data: [$dataStr] }]}
                                   |}""".stripMargin.replaceAll("\n", " ")
         buyingPriceGraph = Some(new Graph(queryStr))
     }
@@ -116,7 +117,7 @@ object graphs {
                                 .mkString(",")
         val queryStr: String = s"""{type: 'bar',
                                     |data: { labels: ['1st quartile', 'median', '3rd quartile'],
-                                    |datasets: [{label: 'rental price quartiles', data: [$dataStr] }]}
+                                    |datasets: [{label: 'rental price quartiles (€)', data: [$dataStr] }]}
                                     |}""".stripMargin.replaceAll("\n", " ")
         rentingPriceGraph = Some(new Graph(queryStr))
     }
@@ -159,8 +160,12 @@ object graphs {
                     getIndicators("75001")
                 }
                 else {
-                    val child = dom.document.createElement("h2")
+                    val child = dom.document.createElement("h1")
+                    child.classList.add("indicators")
+                    child.classList.add("title")
+                    //child.setAttribute("type", "indicators")
                     child.textContent = "Indicators for municipality: " + code
+
                     dom.document.body.appendChild(child)
 
                     generateBuyingPriceGraph()
@@ -183,7 +188,6 @@ object indicators
 {
 
     
-
     def Graphs() = 
     {
         var appartmentCharts: Option[Image] = None
@@ -225,12 +229,14 @@ object indicators
             dom.window.clearInterval(generateGraphHandle)
         }
 
-        appartmentCharts = Some(new Image("./assets/chart.png"))
+        //appartmentCharts = Some(new Image("./assets/chart.png"))
 
 
     }
 
 
     val default = div(cls:="container",
-        Graphs())
+        Graphs(),
+        realestateForm.default
+    )
 }
